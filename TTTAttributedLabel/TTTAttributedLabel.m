@@ -341,6 +341,19 @@ static inline CGSize CTFramesetterSuggestFrameSizeForAttributedStringWithConstra
         return CGSizeZero;
     }
 
+    /// Tchop tchop custom fonts fix - TTTAttributedLabel does not count font.lineHeight
+    NSMutableAttributedString *mutableString = [[NSMutableAttributedString alloc] initWithAttributedString:attributedString];
+    [attributedString enumerateAttribute:NSFontAttributeName
+                                 inRange:NSMakeRange(0, [attributedString length])
+                                 options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired
+                              usingBlock:^(UIFont *font, NSRange range, BOOL *stop) {
+        if (font) {
+            NSMutableParagraphStyle *style = [NSMutableParagraphStyle new];
+            style.minimumLineHeight = font.lineHeight;
+            [mutableString addAttribute:NSParagraphStyleAttributeName value:style range:range];
+        }
+    }];
+
     CTFramesetterRef framesetter = CTFramesetterCreateWithAttributedString((__bridge CFAttributedStringRef)attributedString);
 
     CGSize calculatedSize = CTFramesetterSuggestFrameSizeForAttributedStringWithConstraints(framesetter, attributedString, size, numberOfLines);
